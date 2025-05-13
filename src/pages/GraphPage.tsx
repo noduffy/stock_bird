@@ -11,6 +11,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import dayjs from "dayjs";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+dayjs.extend(isSameOrAfter);
 import { ReferenceArea } from "recharts";
 import {useState} from "react";
 
@@ -29,9 +31,22 @@ const GraphPage = () => {
   const originalData = location.state?.parsedData as PropertyData[];
   const [threshold, setThreshold] = useState(0);
   const [virtualBuildings, setVirtualBuildings] = useState<PropertyData[]>([]);
-  const data = [...originalData, ...virtualBuildings];
   const [showModal, setShowModal] = useState(false);
+  const [showSellModal, setShowSellModal] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null); // 編集中のビルのindex（nullなら新規追加）
+  type SoldBuilding = {
+    ビル名: string;
+    売却日: string; //YYYY-MM-DD
+  };
+  const [soldBuildings, setSoldBuildings] = useState<SoldBuilding[]>([]);
+  const data = [
+    ...originalData.filter((b) => {
+      const sold = soldBuildings.find((s) => s.ビル名 === b.ビル名);
+      if(!sold) return true;
+      return dayjs(b.契約日).isBefore(dayjs(sold.売却日), "month");
+    }),
+    ...virtualBuildings,
+  ];
   const [form, setForm] = useState<PropertyData>({
     ビル名: "",
     契約日: "",
@@ -46,7 +61,11 @@ const GraphPage = () => {
     if (["減価償却", "法定耐用年数", "元金"].includes(key)) return "number";
     return "text"; // ビル名など
   };
-  
+  const [sellForm, setSellForm] = useState<{ name: string; date: string }>({
+    name: "",
+    date: dayjs().format("YYYY-MM-DD"),
+  });
+
 
   if (!data || data.length === 0) {
     return (
@@ -76,8 +95,14 @@ const GraphPage = () => {
     if (monthlyDepreciation === 0 && monthlyPrincipal === 0) return;
 
     // 元金（ローン）加算
+    const sold = soldBuildings.find((s) => s.ビル名 === item.ビル名);
+    const soldMonth = sold ? dayjs(sold.売却日).startOf("month") : null;
+
+    // 元金（ローン）加算
     let cur = contractStart;
     for (let i = 0; i < loanMonths; i++) {
+      if (soldMonth && cur.isSameOrAfter(soldMonth)) break; // 売却月以降は除外
+
       const month = cur.format("YYYY-MM");
       if (!monthlyMap[month]) {
         monthlyMap[month] = { month, 減価償却合計: 0, 元金合計: 0 };
@@ -89,6 +114,8 @@ const GraphPage = () => {
     // 減価償却は耐用年数まで
     cur = contractStart;
     for (let i = 0; i < depreciationMonths; i++) {
+      if (soldMonth && cur.isSameOrAfter(soldMonth)) break; // 売却月以降は除外
+
       const month = cur.format("YYYY-MM");
       if (!monthlyMap[month]) {
         monthlyMap[month] = { month, 減価償却合計: 0, 元金合計: 0 };
@@ -96,6 +123,7 @@ const GraphPage = () => {
       monthlyMap[month].減価償却合計 += monthlyDepreciation;
       cur = cur.add(1, "month");
     }
+
 
     const startMonth = contractStart.format("YYYY-MM");
     const endLoanMonth = loanEnd.add(1, "month").format("YYYY-MM");
@@ -129,6 +157,14 @@ const GraphPage = () => {
 
     ensureMonthlyMap(endDepreciationMonth);
     monthlyMap[endDepreciationMonth]["減価償却イベント"]!.push(`${item.ビル名}：減少`);
+
+    if (soldMonth) {
+      const endMonthStr = soldMonth.format("YYYY-MM");
+      ensureMonthlyMap(endMonthStr);
+      monthlyMap[endMonthStr]["元金イベント"]!.push(`${item.ビル名}：売却`);
+      monthlyMap[endMonthStr]["減価償却イベント"]!.push(`${item.ビル名}：売却`);
+    }
+
   });
 
   const chartData: MonthlyData[] = Object.values(monthlyMap).sort(
@@ -177,7 +213,20 @@ const GraphPage = () => {
     <div style={{ width: "90vw", maxWidth: "1500px", height: "500px", margin: "0 auto" }}>
       <h2>減価償却と元金の推移グラフ</h2>
       <div style={{ marginTop: "1rem" }}>
-        <button onClick={() => setShowModal(true)}>＋ 仮想ビルを追加</button>
+        <button onClick={() => setShowModal(true)}>+ 仮想ビルを追加</button>
+        <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+          <label>
+            売却日：
+            <input
+              type="date"
+              value={sellForm.date}
+              onChange={(e) => setSellForm({ ...sellForm, date: e.target.value })}
+              style={{ marginLeft: "0.5rem" }}
+            />
+          </label>
+        </div>
+
+        <button onClick={() => setShowSellModal(true)}>- ビルを売却</button>
 
         {showModal && (
           <div
@@ -257,6 +306,68 @@ const GraphPage = () => {
             </div>
           </div>
         )}
+        {showSellModal && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              backgroundColor: "rgba(0,0,0,0.4)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "white",
+                padding: "20px",
+                borderRadius: "8px",
+                width: "400px",
+              }}
+            >
+              <h3>ビルを売却</h3>
+              <ul>
+                {originalData
+                  .filter((b) => !soldBuildings.some((s) => s.ビル名 === b.ビル名))
+                  .map((b, i) => (
+                    <li key={i} style={{ marginBottom: "12px" }}>
+                      <label>
+                        <input
+                          type="radio"
+                          name="sell"
+                          value={b.ビル名}
+                          onChange={() => setSellForm({ ...sellForm, name: b.ビル名 })}
+                          style={{ marginRight: "0.5rem" }}
+                        />
+                        {b.ビル名}
+                      </label>
+                    </li>
+                  ))}
+              </ul>
+              <button
+                onClick={() => {
+                  if (!sellForm.name || !sellForm.date) return;
+                  setSoldBuildings([...soldBuildings, {
+                    ビル名: sellForm.name,
+                    売却日: sellForm.date,
+                  }]);
+                  setSellForm({ name: "", date: dayjs().format("YYYY-MM-DD") });
+                  setShowSellModal(false);
+                }}
+                style={{ marginTop: "1rem", marginRight: "1rem" }}
+              >
+                売却する
+              </button>
+
+              <button onClick={() => setShowSellModal(false)}>キャンセル</button>
+            </div>
+          </div>
+        )}
+
       </div>
 
       <div style={{ marginBottom: "1rem" }}>
