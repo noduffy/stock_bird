@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 
 const isDev = process.env.NODE_ENV === "development";
@@ -25,4 +25,16 @@ app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+ipcMain.on('open-building-list', (event, month) => {
+  const win = new BrowserWindow({
+    width: 600,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+
+  win.loadURL(`http://localhost:5173/#/building-list?month=${month}`);
 });

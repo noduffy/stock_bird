@@ -14,7 +14,7 @@ import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 dayjs.extend(isSameOrAfter);
 import { ReferenceArea } from "recharts";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
 type MonthlyData = {
   month: string; // e.g., "2021-06"
@@ -34,6 +34,9 @@ const GraphPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null); // 編集中のビルのindex（nullなら新規追加）
+  
+  const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
+
   type SoldBuilding = {
     ビル名: string;
     売却日: string; //YYYY-MM-DD
@@ -184,7 +187,21 @@ const GraphPage = () => {
     return { x1: month, x2: nextMonth };
   });
 
-  const CustomTooltip = ({active, payload, label }:any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+    onHoverMonth, 
+  }:{
+    active?: boolean;
+    payload?: any;
+    label?: string;
+    onHoverMonth: (label: string) => void;
+  }) => {
+    useEffect(() =>{
+      if (label) onHoverMonth(label);
+    }, [label]);
+
     if(!active || !payload || payload.length === 0) return null;
 
     const data = payload[0].payload as MonthlyData;
@@ -384,11 +401,26 @@ const GraphPage = () => {
         </label>
       </div>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData}>
+        <LineChart
+          data={chartData}
+          onClick={() => {
+            if (hoveredMonth) {
+              const parsedDataString = JSON.stringify(originalData);
+              localStorage.setItem("propertyData", parsedDataString);
+              window.electronAPI.openBuildingList(hoveredMonth);
+            }
+          }}
+        >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" />
           <YAxis />
-          <Tooltip content={<CustomTooltip />}/>
+          <Tooltip
+            content={
+              <CustomTooltip
+                onHoverMonth={(label) => setHoveredMonth(label)}
+              />
+            }
+          />
           <Legend />
           {highlightedRanges.map((range, i) => (
             <ReferenceArea

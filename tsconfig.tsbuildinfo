@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/uploadbutton.tsx","./src/pages/buildinglist.tsx","./src/pages/graphpage.tsx","./src/pages/mainpage.tsx","./src/types/css.d.ts","./src/types/global.d.ts","./src/types/property.ts"],"errors":true,"version":"5.7.3"}
