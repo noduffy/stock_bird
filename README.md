@@ -1,57 +1,39 @@
-# stock_bird
+# Stock-Bird
 Desktop apps for NODACORPORATION
 
-# React + TypeScript + Vite
+# プロジェクト構成（Vite + React + Electron）
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+📦 vite-project/\
+├─ 📁 electron/                  # Electronメインプロセス関連\
+│  ├─ main.cjs                  # メインエントリ（CommonJS）\
+│  └─ preload.js                # Preloadスクリプト（Rendererとの橋渡し）\
+├─ 📁 public/                    # 公開用静的ファイル\
+│  ├─ template.csv              # CSVテンプレートファイル（例示用）\
+│  └─ vite.svg                  # Viteロゴ画像\
+├─ 📁 src/                       # ソースコード\
+│  ├─ 📁 components/             # 共通UIコンポーネント\
+│  │  └─ UploadButton.tsx       # ファイルアップロードボタン\
+│  ├─ 📁 pages/                  # ページ単位のコンポーネント群\
+│  │  ├─ BuildingList.tsx       # ビル一覧表示ページ\
+│  │  ├─ GraphPage.tsx          # グラフ可視化ページ\
+│  │  └─ MainPage.tsx           # メイン画面\
+│  ├─ 📁 types/                  # 型定義（TypeScript用）\
+│  │  ├─ css.d.ts               # CSS Modules用型定義\
+│  │  ├─ global.d.ts            # グローバル型定義\
+│  │  └─ property.ts            # 不動産データの型定義\
+│  ├─ App.tsx                   # アプリケーションのルートコンポーネント\
+│  ├─ main.css                  # グローバルスタイル\
+│  └─ main.tsx                  # Reactアプリのエントリポイント\
+├─ .gitignore                   # Git管理から除外するファイル設定\
+├─ eslint.config.js             # ESLint設定ファイル\
+├─ index.html                   # HTMLエントリポイント\
+├─ package.json                 # プロジェクトの依存パッケージ定義\
+├─ package-lock.json            # 依存パッケージのバージョン固定\
+├─ README.md                    # プロジェクト概要ドキュメント\
+├─ test.html                    # テスト用HTML（用途に応じて整理）\
+├─ tsconfig.app.json            # TypeScript設定（アプリ用）\
+├─ tsconfig.json                # 共通のTypeScript設定\
+├─ tsconfig.node.json           # Node.js向けのTypeScript設定\
+├─ tsconfig.tsbuildinfo         # TypeScriptのビルド情報キャッシュ\
+├─ vite.config.ts               # Viteのビルド設定\
+└─ 要件定義.md                  # 機能要件・仕様などのまとめ\

@@ -15,6 +15,7 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 dayjs.extend(isSameOrAfter);
 import { ReferenceArea } from "recharts";
 import {useEffect, useState} from "react";
+import styles from "../styles/GraphPage.module.css";
 
 type MonthlyData = {
   month: string; // e.g., "2021-06"
@@ -227,81 +228,108 @@ const GraphPage = () => {
   }
     
   return (
-    <div style={{ width: "90vw", maxWidth: "1500px", height: "500px", margin: "0 auto" }}>
+    <div className={styles.container}>
       <h2>減価償却と元金の推移グラフ</h2>
-      <div style={{ marginTop: "1rem" }}>
-        <button onClick={() => setShowModal(true)}>+ 仮想ビルを追加</button>
-        <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+
+      <div className={styles.controls}>
+
+        <div className={styles.controlGroup}>
           <label>
             売却日：
             <input
               type="date"
               value={sellForm.date}
               onChange={(e) => setSellForm({ ...sellForm, date: e.target.value })}
-              style={{ marginLeft: "0.5rem" }}
             />
           </label>
         </div>
+        <div className={styles.controlGroup}>
+          <button className={styles.button} onClick={() => setShowSellModal(true)}>
+            ビルを売却
+          </button>
+        </div>
+        {showSellModal && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modalContent}>
+              <h3>ビルを売却</h3>
+              <ul className={styles.radioGroup}>
+                {originalData
+                  .filter((b) => !soldBuildings.some((s) => s.ビル名 === b.ビル名))
+                  .map((b, i) => (
+                    <li key={i}>
+                      <label>
+                        <input
+                          type="radio"
+                          name="sell"
+                          value={b.ビル名}
+                          onChange={() => setSellForm({ ...sellForm, name: b.ビル名 })}
+                        />
+                        {b.ビル名}
+                      </label>
+                    </li>
+                  ))}
+              </ul>
+              <div className={styles.modalButtons}>
+                <button
+                  onClick={() => {
+                    if (!sellForm.name || !sellForm.date) return;
+                    setSoldBuildings([
+                      ...soldBuildings,
+                      { ビル名: sellForm.name, 売却日: sellForm.date },
+                    ]);
+                    setSellForm({ name: "", date: dayjs().format("YYYY-MM-DD") });
+                    setShowSellModal(false);
+                  }}
+                >
+                  売却する
+                </button>
+                <button onClick={() => setShowSellModal(false)}>キャンセル</button>
+              </div>
+            </div>
+          </div>
+        )}
 
-        <button onClick={() => setShowSellModal(true)}>- ビルを売却</button>
 
+        <div className={styles.controlGroup}>
+          <button className={styles.button} onClick={() => setShowModal(true)}>
+            仮想ビルを追加
+          </button>
+        </div>
         {showModal && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100vw",
-              height: "100vh",
-              backgroundColor: "rgba(0,0,0,0.4)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 1000,
-            }}
-          >
-            <div
-              style={{
-                backgroundColor: "white",
-                padding: "20px",
-                borderRadius: "8px",
-                width: "400px",
-              }}
-            >
+          <div className={styles.modalOverlay}>
+            <div className={styles.modalContent}>
               <h3>仮想ビルを追加</h3>
+
               {["ビル名", "契約日", "減価償却", "法定耐用年数", "元金", "ローンの期限"].map((key) => (
-                <div key={key} style={{ marginBottom: "8px" }}>
-                  <label>{key}：
-                    <input
-                      type={getInputType(key)}
-                      value={(form as any)[key]?.toString() ?? ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const newValue =
-                          ["減価償却", "法定耐用年数", "元金"].includes(key)
-                            ? Number(value)
-                            : value;
-                        setForm({ ...form, [key]: newValue });
-                      }}
-                      style={{ marginLeft: "8px", width: "100%" }}
-                    />
-                  </label>
+                <div key={key} className={styles.formField}>
+                  <label>{key}：</label>
+                  <input
+                    type={getInputType(key)}
+                    className={styles.formInput}
+                    value={(form as any)[key]?.toString() ?? ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const newValue =
+                        ["減価償却", "法定耐用年数", "元金"].includes(key)
+                          ? Number(value)
+                          : value;
+                      setForm({ ...form, [key]: newValue });
+                    }}
+                  />
                 </div>
               ))}
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+
+              <div className={styles.modalButtons}>
                 <button
                   onClick={() => {
                     if (editIndex !== null) {
-                      // 編集の場合：既存データの上書き
                       const updated = [...virtualBuildings];
                       updated[editIndex] = form;
                       setVirtualBuildings(updated);
                     } else {
-                      // 新規追加
                       setVirtualBuildings([...virtualBuildings, form]);
                     }
 
-                    // 初期化してモーダルを閉じる
                     setForm({
                       ビル名: "",
                       契約日: "",
@@ -323,134 +351,85 @@ const GraphPage = () => {
             </div>
           </div>
         )}
-        {showSellModal && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100vw",
-              height: "100vh",
-              backgroundColor: "rgba(0,0,0,0.4)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 1000,
+
+      </div>
+
+      <div className={styles.thresholdBox}>
+        <label htmlFor="threshold" className={styles.thresholdLabel}>
+          赤背景の基準（減価償却 - 元金 がこの値未満）：
+        </label>
+        <input
+          id="threshold"
+          type="number"
+          value={threshold}
+          onChange={(e) => setThreshold(Number(e.target.value))}
+          inputMode="numeric"
+          pattern="-?[0-9]*"
+          className={styles.thresholdInput}
+        />
+      </div>
+
+      <div className={styles.chartContainer}>
+        <ResponsiveContainer width="100%" height={500}>
+          <LineChart
+            data={chartData}
+            onClick={() => {
+              if (hoveredMonth) {
+                const visibleData = originalData.filter((b) => {
+                  const sold = soldBuildings.find((s) => s.ビル名 === b.ビル名);
+                  if(!sold) return true;
+                  return dayjs(hoveredMonth).isBefore(dayjs(sold.売却日), "month");
+                });
+                localStorage.setItem("propertyData", JSON.stringify(visibleData));
+                window.electronAPI.openBuildingList(hoveredMonth);
+              }
             }}
           >
-            <div
-              style={{
-                backgroundColor: "white",
-                padding: "20px",
-                borderRadius: "8px",
-                width: "400px",
-              }}
-            >
-              <h3>ビルを売却</h3>
-              <ul>
-                {originalData
-                  .filter((b) => !soldBuildings.some((s) => s.ビル名 === b.ビル名))
-                  .map((b, i) => (
-                    <li key={i} style={{ marginBottom: "12px" }}>
-                      <label>
-                        <input
-                          type="radio"
-                          name="sell"
-                          value={b.ビル名}
-                          onChange={() => setSellForm({ ...sellForm, name: b.ビル名 })}
-                          style={{ marginRight: "0.5rem" }}
-                        />
-                        {b.ビル名}
-                      </label>
-                    </li>
-                  ))}
-              </ul>
-              <button
-                onClick={() => {
-                  if (!sellForm.name || !sellForm.date) return;
-                  setSoldBuildings([...soldBuildings, {
-                    ビル名: sellForm.name,
-                    売却日: sellForm.date,
-                  }]);
-                  setSellForm({ name: "", date: dayjs().format("YYYY-MM-DD") });
-                  setShowSellModal(false);
-                }}
-                style={{ marginTop: "1rem", marginRight: "1rem" }}
-              >
-                売却する
-              </button>
-
-              <button onClick={() => setShowSellModal(false)}>キャンセル</button>
-            </div>
-          </div>
-        )}
-
-      </div>
-
-      <div style={{ marginBottom: "1rem" }}>
-        <label>
-          赤背景の基準（減価償却 - 元金 がこの値未満）:
-          <input
-            type="number"
-            value={threshold}
-            onChange={(e) => setThreshold(Number(e.target.value))}
-            inputMode="numeric"
-            pattern="-?[0-9]*"
-            style={{ marginLeft: "0.5rem", width: "100px" }}
-          />
-        </label>
-      </div>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={chartData}
-          onClick={() => {
-            if (hoveredMonth) {
-              const parsedDataString = JSON.stringify(originalData);
-              localStorage.setItem("propertyData", parsedDataString);
-              window.electronAPI.openBuildingList(hoveredMonth);
-            }
-          }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="month" />
-          <YAxis />
-          <Tooltip
-            content={
-              <CustomTooltip
-                onHoverMonth={(label) => setHoveredMonth(label)}
-              />
-            }
-          />
-          <Legend />
-          {highlightedRanges.map((range, i) => (
-            <ReferenceArea
-              key={i}
-              x1={range.x1}
-              x2={range.x2}
-              stroke="red"
-              strokeOpacity={0.2}
-              fill="red"
-              fillOpacity={0.1}
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip
+              content={
+                <CustomTooltip
+                  onHoverMonth={(label) => setHoveredMonth(label)}
+                />
+              }
             />
-          ))}
+            <Legend />
+            {highlightedRanges.map((range, i) => (
+              <ReferenceArea
+                key={i}
+                x1={range.x1}
+                x2={range.x2}
+                stroke="red"
+                strokeOpacity={0.2}
+                fill="red"
+                fillOpacity={0.1}
+              />
+            ))}
 
-          <Line
-            type="monotone"
-            dataKey="減価償却合計"
-            stroke="#8884d8"
-            strokeWidth={2}
-            name="減価償却"
-          />
-          <Line
-            type="monotone"
-            dataKey="元金合計"
-            stroke="#82ca9d"
-            strokeWidth={2}
-            name="元金"
-          />
-        </LineChart>
-      </ResponsiveContainer>
-      <button onClick={() => navigate("/")}>戻る</button>
+            <Line
+              type="monotone"
+              dataKey="減価償却合計"
+              stroke="#8884d8"
+              strokeWidth={2}
+              name="減価償却"
+            />
+            <Line
+              type="monotone"
+              dataKey="元金合計"
+              stroke="#82ca9d"
+              strokeWidth={2}
+              name="元金"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <button className={styles.backbutton} onClick={() => navigate("/")}>
+        戻る
+      </button>
+
       {virtualBuildings.length > 0 && (
         <div style={{ marginTop: "2rem" }}>
           <h3>追加済みの仮想ビル一覧</h3>
