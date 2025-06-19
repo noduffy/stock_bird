@@ -1,0 +1,21 @@
+appId: nodaco_app
+productName: Stock-Bird
+files:
+  - dist/**
+  - electron/**
+directories:
+  output: release
+  buildResources: public
+extraMetadata:
+  main: electron/main.cjs
+
+win:
+  target: nsis
+  icon: public/icon.ico
+  signAndEditExecutable: false   # ← DLL署名やコード署名を完全無効にする
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true

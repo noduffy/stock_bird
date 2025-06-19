@@ -1,0 +1,21 @@
+directories:
+  output: release
+  buildResources: public
+appId: nodaco_app
+productName: Stock-Bird
+files:
+  - filter:
+      - dist/**
+      - electron/**
+extraMetadata:
+  main: electron/main.cjs
+win:
+  target: nsis
+  icon: public/icon.ico
+  signAndEditExecutable: false
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  allowToChangeInstallationDirectory: true
+electronVersion: 35.1.2
