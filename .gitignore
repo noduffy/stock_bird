@@ -25,3 +25,6 @@ dist-ssr
 
 # Ignore all exe files
 *.exe
+
+
+/git-filter-repo
