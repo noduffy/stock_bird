@@ -16,6 +16,9 @@ dayjs.extend(isSameOrAfter);
 import { ReferenceArea } from "recharts";
 import {useEffect, useState} from "react";
 import styles from "../styles/GraphPage.module.css";
+import minMax from "dayjs/plugin/minMax";
+dayjs.extend(minMax);
+
 
 type MonthlyData = {
   month: string; // e.g., "2021-06"
@@ -181,12 +184,45 @@ const GraphPage = () => {
       diff: entry.減価償却合計 - entry.元金合計,
       month: entry.month,
     }))
-    .filter(({ diff }) => diff < threshold);
+    .filter(({ diff }) => diff < threshold * 1000);
 
   const highlightedRanges = lowDiffAreas.map(({ month }) => {
     const nextMonth = dayjs(month).add(1, "month").format("YYYY-MM");
     return { x1: month, x2: nextMonth };
   });
+
+  const xTicks = chartData
+    .map((d) => d.month)
+    .filter((month) => dayjs(month).month() === 0);
+
+  const months = chartData.map((d) => d.month);
+  const dayjsMonths = months.map((m) => dayjs(m));
+
+  let minMonth = "";
+  let maxMonth = "";
+
+  const minDate = dayjs.min(dayjsMonths);
+  const maxDate = dayjs.max(dayjsMonths);
+
+  if (minDate && maxDate) {
+    minMonth = minDate.format("YYYY-MM");
+    maxMonth = maxDate.format("YYYY-MM");
+  } else {
+    // デフォルト値（空でない期間）を入れておくとUI崩壊を防げます
+    minMonth = "2000-01";
+    maxMonth = "2100-01";
+  }
+
+  const [startMonth, setStartMonth] = useState(minMonth);
+  const [endMonth, setEndMonth] = useState(maxMonth);
+
+  const filterdData = chartData.filter((item) => {
+    return (
+      dayjs(item.month).isSameOrAfter(dayjs(startMonth)) &&
+      dayjs(item.month).isSameOrBefore(dayjs(endMonth))
+    );
+  });
+
 
   const CustomTooltip = ({
     active,
@@ -229,7 +265,7 @@ const GraphPage = () => {
     
   return (
     <div className={styles.container}>
-      <h2>減価償却と元金の推移グラフ</h2>
+
 
       <div className={styles.controls}>
 
@@ -356,7 +392,7 @@ const GraphPage = () => {
 
       <div className={styles.thresholdBox}>
         <label htmlFor="threshold" className={styles.thresholdLabel}>
-          赤背景の基準（減価償却 - 元金 がこの値未満）：
+          赤背景： 元金 ー 減価償却 ＞
         </label>
         <input
           id="threshold"
@@ -367,12 +403,17 @@ const GraphPage = () => {
           pattern="-?[0-9]*"
           className={styles.thresholdInput}
         />
+        千円
       </div>
+
+      <label>開始月: <input type="month" value={startMonth} onChange={(e) => setStartMonth(e.target.value)} /></label>
+      <label>終了月: <input type="month" value={endMonth} onChange={(e) => setEndMonth(e.target.value)} /></label>
+
 
       <div className={styles.chartContainer}>
         <ResponsiveContainer width="100%" height={500}>
           <LineChart
-            data={chartData}
+            data={filterdData}
             onClick={() => {
               if (hoveredMonth) {
                 const visibleData = originalData.filter((b) => {
@@ -386,8 +427,16 @@ const GraphPage = () => {
             }}
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
+            <XAxis 
+              dataKey="month"
+              ticks={xTicks}
+              tickFormatter={(tick) => dayjs(tick).format("YYYY年MM月")}
+            />
+            <YAxis
+              tickFormatter={(value) =>
+                value.toLocaleString()
+              }
+            />
             <Tooltip
               content={
                 <CustomTooltip
