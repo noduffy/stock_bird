@@ -390,28 +390,46 @@ const GraphPage = () => {
 
       </div>
 
-      <div className={styles.thresholdBox}>
-        <label htmlFor="threshold" className={styles.thresholdLabel}>
-          赤背景： 元金 ー 減価償却 ＞
-        </label>
-        <input
-          id="threshold"
-          type="number"
-          value={threshold}
-          onChange={(e) => setThreshold(Number(e.target.value))}
-          inputMode="numeric"
-          pattern="-?[0-9]*"
-          className={styles.thresholdInput}
-        />
-        千円
+      <div className={styles.dateControlsBox}>
+        <div className={styles.dateControlsRow}>
+          <div className={styles.dateInputGroup}>
+            <label htmlFor="startMonth">開始月</label>
+            <input
+              type="month"
+              id="startMonth"
+              value={startMonth}
+              onChange={(e) => setStartMonth(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.dateInputGroup}>
+            <label htmlFor="endMonth">終了月</label>
+            <input
+              type="month"
+              id="endMonth"
+              value={endMonth}
+              onChange={(e) => setEndMonth(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.thresholdInline}>
+            <label htmlFor="threshold">赤背景：元金 − 減価償却 ＞</label>
+            <input
+              id="threshold"
+              type="number"
+              value={threshold}
+              onChange={(e) => setThreshold(Number(e.target.value))}
+              className={styles.thresholdInput}
+            />
+            <span>千円</span>
+          </div>
+        </div>
       </div>
 
-      <label>開始月: <input type="month" value={startMonth} onChange={(e) => setStartMonth(e.target.value)} /></label>
-      <label>終了月: <input type="month" value={endMonth} onChange={(e) => setEndMonth(e.target.value)} /></label>
 
 
       <div className={styles.chartContainer}>
-        <ResponsiveContainer width="100%" height={500}>
+        <ResponsiveContainer width="95%" height={500}>
           <LineChart
             data={filterdData}
             onClick={() => {
@@ -425,6 +443,7 @@ const GraphPage = () => {
                 window.electronAPI.openBuildingList(hoveredMonth);
               }
             }}
+            margin={{ top: 20, right: 30, left: 50, bottom: 20}}
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 

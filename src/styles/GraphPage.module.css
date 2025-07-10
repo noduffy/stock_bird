@@ -35,11 +35,11 @@
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 20px;
+  padding: 20px 0 20px 20px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   margin: 0 auto 24px;
   width: 100%;
-  max-width: 1000px;
+  max-width: 90vw;
   height: auto;
 }
 
@@ -148,4 +148,38 @@
   font-size: 14px;
   border-radius: 4px;
   border: 1px solid #ccc;
+}
+
+/* 開始月等 */
+.dateControlsRow {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 1rem;
+}
+
+.dateInputGroup label {
+  margin-bottom: 4px;
+  display: block;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.thresholdInline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dateControlsBox {
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 10px 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin: 0 auto 20px auto;
+  display: flex;
+  justify-content: flex-start;
+  width: fit-content;
 }
