@@ -3,6 +3,8 @@ import React from "react";
 // import type { ParseResult } from "papaparse";
 import { useNavigate } from "react-router-dom";
 import UploadButton from "../components/UploadButton";
+import DownloadTemplateButton from "../components/DownloadTemplateButton";
+
 // import { PropertyData } from "../types/property";
 import "../Main.css";
 import * as XLSX from "xlsx";
@@ -65,9 +67,7 @@ const MainPage = () => {
     <div className="container">
       <h1>不動産データ管理アプリ</h1>
       <UploadButton onFileChange={handleFileChange} />
-      <a href="/template.csv" className="download-link" download>
-        テンプレートCSVをダウンロード
-      </a>
+      <DownloadTemplateButton />
     </div>
   );
 };
