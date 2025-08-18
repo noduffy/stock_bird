@@ -80,6 +80,8 @@
   border-radius: 12px;
   width: 400px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  max-height: 80vh; /* 画面の高さの80%を最大値に設定 */
+  overflow-y: auto;  /* コンテンツが溢れた場合にスクロールバーを表示 */
 }
 
 .modalContent h3 {
