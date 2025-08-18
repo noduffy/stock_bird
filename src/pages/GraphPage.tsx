@@ -45,7 +45,13 @@ const GraphPage = () => {
     ビル名: string;
     売却日: string; //YYYY-MM-DD
   };
+  type HistoryItem = {
+    type: "sell";
+    name: string;
+    date: string;
+  };
   const [soldBuildings, setSoldBuildings] = useState<SoldBuilding[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const data = [
     ...originalData.filter((b) => {
       const sold = soldBuildings.find((s) => s.ビル名 === b.ビル名);
@@ -54,6 +60,7 @@ const GraphPage = () => {
     }),
     ...virtualBuildings,
   ];
+  
   const [form, setForm] = useState<PropertyData>({
     ビル名: "",
     契約日: "",
@@ -184,7 +191,7 @@ const GraphPage = () => {
       diff: entry.減価償却合計 - entry.元金合計,
       month: entry.month,
     }))
-    .filter(({ diff }) => diff < threshold * 1000);
+    .filter(({ diff }) => diff < threshold * 10000);//万単位に変換
 
   const highlightedRanges = lowDiffAreas.map(({ month }) => {
     const nextMonth = dayjs(month).add(1, "month").format("YYYY-MM");
@@ -309,10 +316,19 @@ const GraphPage = () => {
                 <button
                   onClick={() => {
                     if (!sellForm.name || !sellForm.date) return;
-                    setSoldBuildings([
-                      ...soldBuildings,
-                      { ビル名: sellForm.name, 売却日: sellForm.date },
-                    ]);
+                    const newSoldBuilding: SoldBuilding = {
+                      ビル名: sellForm.name,
+                      売却日: sellForm.date,
+                    };
+                    setSoldBuildings([...soldBuildings, newSoldBuilding]);
+
+                    const newHistoryItem: HistoryItem = {
+                      type: "sell",
+                      name: newSoldBuilding.ビル名,
+                      date: dayjs().format("YYYY-MM-DD"), // 操作日を記録
+                    };
+                    setHistory([...history, newHistoryItem]);
+
                     setSellForm({ name: "", date: dayjs().format("YYYY-MM-DD") });
                     setShowSellModal(false);
                   }}
@@ -421,7 +437,7 @@ const GraphPage = () => {
               onChange={(e) => setThreshold(Number(e.target.value))}
               className={styles.thresholdInput}
             />
-            <span>千円</span>
+            <span>万円</span>
           </div>
         </div>
       </div>
@@ -529,6 +545,29 @@ const GraphPage = () => {
           </ul>
         </div>
       )}
+
+      {history.length > 0 && (
+        <div style={{ marginTop: "2rem" }}>
+          <h3>操作履歴</h3>
+          <ul className={styles.historyList}>
+            {history.map((item, index) => (
+              <li key={index}>
+                {item.date}：**{item.name}**を売却しました
+                <button
+                  className={styles.historyButton}
+                  onClick={() => {
+                    setSoldBuildings(soldBuildings.filter(b => b.ビル名 !== item.name));
+                    setHistory(history.filter(h => h.name !== item.name));
+                  }}
+                >
+                  売却を取り消す
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
     </div>
   );
 };
