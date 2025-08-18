@@ -191,7 +191,7 @@ const GraphPage = () => {
       diff: entry.減価償却合計 - entry.元金合計,
       month: entry.month,
     }))
-    .filter(({ diff }) => diff < threshold * 1000);
+    .filter(({ diff }) => diff < threshold * 10000);//万単位に変換
 
   const highlightedRanges = lowDiffAreas.map(({ month }) => {
     const nextMonth = dayjs(month).add(1, "month").format("YYYY-MM");
@@ -437,7 +437,7 @@ const GraphPage = () => {
               onChange={(e) => setThreshold(Number(e.target.value))}
               className={styles.thresholdInput}
             />
-            <span>千円</span>
+            <span>万円</span>
           </div>
         </div>
       </div>
