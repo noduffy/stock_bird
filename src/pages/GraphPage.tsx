@@ -191,7 +191,7 @@ const GraphPage = () => {
       diff: entry.減価償却合計 - entry.元金合計,
       month: entry.month,
     }))
-    .filter(({ diff }) => diff < threshold * 10000);//万単位に変換
+    .filter(({ diff }) => diff < threshold * -10000);//万単位に変換
 
   const highlightedRanges = lowDiffAreas.map(({ month }) => {
     const nextMonth = dayjs(month).add(1, "month").format("YYYY-MM");
