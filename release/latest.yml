@@ -1,8 +1,8 @@
-version: 0.0.0
+version: 0.0.1
 files:
-  - url: Stock-Bird-Setup-0.0.0.exe
-    sha512: F74aU3NJWASlEsg9ZUuSFM4Fgth7MIpcDEXmKVz69ki5Oj+hvzKsWlVuLnUqtkhQyGWBJaP6v+YzP5okwO1KVw==
-    size: 90752758
-path: Stock-Bird-Setup-0.0.0.exe
-sha512: F74aU3NJWASlEsg9ZUuSFM4Fgth7MIpcDEXmKVz69ki5Oj+hvzKsWlVuLnUqtkhQyGWBJaP6v+YzP5okwO1KVw==
-releaseDate: '2025-06-19T16:06:33.969Z'
+  - url: Stock-Bird-Setup-0.0.1.exe
+    sha512: YHoZ+VVkNfWuT3gn6KnfAH4qEbMWzMfQXgz5U7tmWDEokar9M4PSrmZeljGUN7P4vsTs3kJVYOd56wuwdfxuMQ==
+    size: 92639361
+path: Stock-Bird-Setup-0.0.1.exe
+sha512: YHoZ+VVkNfWuT3gn6KnfAH4qEbMWzMfQXgz5U7tmWDEokar9M4PSrmZeljGUN7P4vsTs3kJVYOd56wuwdfxuMQ==
+releaseDate: '2025-08-19T01:38:44.924Z'

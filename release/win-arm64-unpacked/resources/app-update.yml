@@ -1,0 +1,4 @@
+owner: noduffy
+repo: stock_bird
+provider: github
+updaterCacheDirName: vite-project-updater

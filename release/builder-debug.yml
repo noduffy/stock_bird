@@ -1,4 +1,4 @@
-x64:
+arm64:
   firstOrDefaultFilePatterns:
     - '!**/node_modules/**'
     - '!public{,/**/*}'
@@ -19,8 +19,8 @@ x64:
     - electron/**
 nsis:
   script: |-
-    !include "C:\Users\noduf\Documents\nodaco\vite-project\node_modules\app-builder-lib\templates\nsis\include\StdUtils.nsh"
-    !addincludedir "C:\Users\noduf\Documents\nodaco\vite-project\node_modules\app-builder-lib\templates\nsis\include"
+    !include "/Users/noduffy_pc/Creating_Apps/forNodaco/stock_bird_remote/stock_bird/node_modules/app-builder-lib/templates/nsis/include/StdUtils.nsh"
+    !addincludedir "/Users/noduffy_pc/Creating_Apps/forNodaco/stock_bird_remote/stock_bird/node_modules/app-builder-lib/templates/nsis/include"
     !macro _isUpdated _a _b _t _f
       ${StdUtils.TestParameter} $R9 "updated"
       StrCmp "$R9" "true" `${_t}` `${_f}`
@@ -92,9 +92,9 @@ nsis:
       !insertmacro MUI_LANGUAGE "Vietnamese"
     !macroend
 
-    !include "C:\Users\noduf\AppData\Local\Temp\t-h3VJi5\3-messages.nsh"
-    !include "C:\Users\noduf\AppData\Local\Temp\t-h3VJi5\2-messages.nsh"
-    !addplugindir /x86-unicode "C:\Users\noduf\AppData\Local\electron-builder\Cache\nsis\nsis-resources-3.4.1\plugins\x86-unicode"
+    !include "/private/var/folders/bx/dpyhhx_11cgd71kb_cbqcxfm0000gn/T/t-fl0aKH/2-messages.nsh"
+    !include "/private/var/folders/bx/dpyhhx_11cgd71kb_cbqcxfm0000gn/T/t-fl0aKH/3-messages.nsh"
+    !addplugindir /x86-unicode "/Users/noduffy_pc/Library/Caches/electron-builder/nsis/nsis-resources-3.4.1/plugins/x86-unicode"
 
     Var newStartMenuLink
     Var oldStartMenuLink

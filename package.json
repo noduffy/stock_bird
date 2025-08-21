@@ -1,7 +1,7 @@
 {
   "name": "vite-project",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
@@ -11,6 +11,16 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "dist": "npm run build && electron-builder --win"
+  },
+  "build": {
+    "productName": "Stock-Bird",
+    "appId": "com.yourcompany.stockbird",
+    "mac": {
+      "category": "public.app-category.business"
+    },
+    "win": {
+      "target": "nsis"
+    }
   },
   "dependencies": {
     "dayjs": "^1.11.13",
