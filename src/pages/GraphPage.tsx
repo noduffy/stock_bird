@@ -1,3 +1,4 @@
+import SimulationHistory from "./SimulationHistory";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PropertyData } from "../types/property";
 import {
@@ -11,10 +12,15 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import dayjs from "dayjs";
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
-dayjs.extend(isSameOrAfter);
 import { ReferenceArea } from "recharts";
-import {useEffect, useState} from "react";
+
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { useEffect, useState, useMemo } from "react";
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+
 import styles from "../styles/GraphPage.module.css";
 import minMax from "dayjs/plugin/minMax";
 dayjs.extend(minMax);
@@ -28,32 +34,52 @@ type MonthlyData = {
   元金イベント?: string[];
 };
 
+// 売却と追加の操作を区別するための型
+type Simulation =
+  | { id: string; type: "add"; data: PropertyData }
+  | { id: string; type: "sell"; buildingName: string; date: string };
 
 const GraphPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const originalData = location.state?.parsedData as PropertyData[];
   const [threshold, setThreshold] = useState(0);
-  const [virtualBuildings, setVirtualBuildings] = useState<PropertyData[]>([]);
+
   const [showModal, setShowModal] = useState(false);
   const [showSellModal, setShowSellModal] = useState(false);
-  const [editIndex, setEditIndex] = useState<number | null>(null); // 編集中のビルのindex（nullなら新規追加）
+  const [editIndex, setEditIndex] = useState<string | null>(null); // 編集中のビルのindex（nullなら新規追加）
   
   const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
 
+  const [simulations, setSimulations] = useState<Simulation[]>([]);
+
   type SoldBuilding = {
     ビル名: string;
-    売却日: string; //YYYY-MM-DD
+    売却日: string;
   };
-  const [soldBuildings, setSoldBuildings] = useState<SoldBuilding[]>([]);
-  const data = [
-    ...originalData.filter((b) => {
-      const sold = soldBuildings.find((s) => s.ビル名 === b.ビル名);
-      if(!sold) return true;
-      return dayjs(b.契約日).isBefore(dayjs(sold.売却日), "month");
-    }),
-    ...virtualBuildings,
-  ];
+
+  const { virtualBuildings, soldBuildings } = useMemo((): {
+    virtualBuildings: PropertyData[];
+    soldBuildings: SoldBuilding[];
+  } => {
+    const vBuildings: PropertyData[] = [];
+    const sBuildings: SoldBuilding[] = [];
+
+    simulations.forEach((sim) => {
+      if (sim.type === "add") {
+        vBuildings.push(sim.data);
+      } else if (sim.type === "sell") {
+        sBuildings.push({ ビル名: sim.buildingName, 売却日: sim.date });
+      }
+    });
+    return { virtualBuildings: vBuildings, soldBuildings: sBuildings };
+  }, [simulations]);
+
+  const data = useMemo(
+      () => [...originalData, ...virtualBuildings],
+      [originalData, virtualBuildings]
+  );
+
   const [form, setForm] = useState<PropertyData>({
     ビル名: "",
     契約日: "",
@@ -228,40 +254,50 @@ const GraphPage = () => {
     active,
     payload,
     label,
-    onHoverMonth, 
-  }:{
+    onHoverMonth,
+  }: {
     active?: boolean;
     payload?: any;
     label?: string;
-    onHoverMonth: (label: string) => void;
+    onHoverMonth: (label: string | null) => void;
   }) => {
-    useEffect(() =>{
-      if (label) onHoverMonth(label);
-    }, [label]);
+    useEffect(() => {
+      if (active && label) {
+        onHoverMonth(label);
+      } else {
+        onHoverMonth(null);
+      }
+    }, [active, label, onHoverMonth]);
 
-    if(!active || !payload || payload.length === 0) return null;
+    if (!active || !payload || payload.length === 0 || !label) {
+        return null;
+    }
 
     const data = payload[0].payload as MonthlyData;
+    const [year, month] = label.split("-"); // この時点でlabelは必ずstring型
+    const formattedLabel = `${year}年${month}月`;
 
-    return(
-      <div style={{ background: "white", padding: 10, border: "1px solid #ccc"}}>
-        <strong>{label}</strong>
+    return (
+      <div
+        style={{ background: "white", padding: 10, border: "1px solid #ccc" }}
+      >
+        <strong>{formattedLabel}</strong>
         <br />
-        元金: {data.元金合計}
+        元金: {data.元金合計.toLocaleString()}
         <br />
-        {data.元金イベント?.map((e,i) => (
+        {data.元金イベント?.map((e, i) => (
           <div key={i}>{e}</div>
         ))}
         <br />
-        減価償却: {data.減価償却合計}
+        減価償却: {data.減価償却合計.toLocaleString()}
         <br />
-        {data.減価償却イベント?.map((e,i) => (
+        {data.減価償却イベント?.map((e, i) => (
           <div key={i}>{e}</div>
         ))}
         <br />
       </div>
-    )
-  }
+    );
+  };
     
   return (
     <div className={styles.container}>
@@ -309,10 +345,15 @@ const GraphPage = () => {
                 <button
                   onClick={() => {
                     if (!sellForm.name || !sellForm.date) return;
-                    setSoldBuildings([
-                      ...soldBuildings,
-                      { ビル名: sellForm.name, 売却日: sellForm.date },
-                    ]);
+
+                    const newSellEvent: Simulation = {
+                      id: crypto.randomUUID(), // 一意のIDを付与
+                      type: "sell",
+                      buildingName: sellForm.name,
+                      date: sellForm.date,
+                    };
+                    setSimulations([...simulations, newSellEvent]);
+
                     setSellForm({ name: "", date: dayjs().format("YYYY-MM-DD") });
                     setShowSellModal(false);
                   }}
@@ -359,11 +400,17 @@ const GraphPage = () => {
                 <button
                   onClick={() => {
                     if (editIndex !== null) {
-                      const updated = [...virtualBuildings];
-                      updated[editIndex] = form;
-                      setVirtualBuildings(updated);
+                      const updatedSimulations = simulations.map((sim) =>
+                        sim.id === editIndex ? { ...sim, data: form } : sim
+                      );
+                      setSimulations(updatedSimulations);
                     } else {
-                      setVirtualBuildings([...virtualBuildings, form]);
+                      const newAddEvent: Simulation = {
+                        id: crypto.randomUUID(),
+                        type: "add",
+                        data: form,
+                      };
+                      setSimulations([...simulations, newAddEvent]);
                     }
 
                     setForm({
@@ -434,10 +481,24 @@ const GraphPage = () => {
             data={filterdData}
             onClick={() => {
               if (hoveredMonth) {
-                const visibleData = originalData.filter((b) => {
-                  const sold = soldBuildings.find((s) => s.ビル名 === b.ビル名);
-                  if(!sold) return true;
-                  return dayjs(hoveredMonth).isBefore(dayjs(sold.売却日), "month");
+                const currentMonth = dayjs(hoveredMonth);
+                // `data` (オリジナル+仮想) を元にフィルタリング
+                const visibleData = data.filter((b) => {
+                  // 契約前は除外
+                  if (currentMonth.isBefore(dayjs(b.契約日), "month")) {
+                    return false;
+                  }
+                  // 売却済みか確認
+                  const sold = soldBuildings.find(
+                    (s) => s.ビル名 === b.ビル名
+                  );
+                  if (
+                    sold &&
+                    currentMonth.isSameOrAfter(dayjs(sold.売却日), "month")
+                  ) {
+                    return false; // 売却月以降は除外
+                  }
+                  return true; // 上記以外は表示
                 });
                 localStorage.setItem("propertyData", JSON.stringify(visibleData));
                 window.electronAPI.openBuildingList(hoveredMonth);
@@ -457,11 +518,9 @@ const GraphPage = () => {
               }
             />
             <Tooltip
-              content={
-                <CustomTooltip
-                  onHoverMonth={(label) => setHoveredMonth(label)}
-                />
-              }
+              content={(props) => (
+                <CustomTooltip {...props} onHoverMonth={setHoveredMonth} />
+              )}
             />
             <Legend />
             {highlightedRanges.map((range, i) => (
@@ -498,37 +557,20 @@ const GraphPage = () => {
         戻る
       </button>
 
-      {virtualBuildings.length > 0 && (
-        <div style={{ marginTop: "2rem" }}>
-          <h3>追加済みの仮想ビル一覧</h3>
-          <ul>
-            {virtualBuildings.map((bldg, index) => (
-              <li key={index} style={{ marginBottom: "0.5rem" }}>
-                <strong>{bldg.ビル名}</strong>（契約日: {bldg.契約日}, 減価償却: {bldg.減価償却}, 元金: {bldg.元金}）
-                <button
-                  onClick={() => {
-                    setForm(virtualBuildings[index]); // 編集対象のデータをフォームに入れる
-                    setEditIndex(index);
-                    setShowModal(true);
-                  }}
-                >
-                  編集
-                </button>
-                <button
-                  onClick={() => {
-                    const updated = [...virtualBuildings];
-                    updated.splice(index, 1);
-                    setVirtualBuildings(updated);
-                  }}
-                  style={{ marginLeft: "1rem" }}
-                >
-                  削除
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <SimulationHistory
+        simulations={simulations}
+        onEdit={(sim) => {
+          if (sim.type === 'add') {
+            setForm(sim.data);
+            setEditIndex(sim.id);
+            setShowModal(true);
+          }
+        }}
+        onDelete={(id) => {
+          setSimulations(simulations.filter((s) => s.id !== id));
+        }}
+      />
+
     </div>
   );
 };

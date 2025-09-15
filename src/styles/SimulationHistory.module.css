@@ -1,0 +1,110 @@
+/* --- シミュレーション履歴全体 --- */
+.historyContainer {
+  width: 100%;
+  max-width: 800px; /* リストの最大幅を調整 */
+  margin: 40px auto; /* 上下のマージンを調整 */
+}
+
+.historyContainer h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #eee;
+}
+
+/* --- 履歴リスト (ul) --- */
+.historyList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* 各カードの間のスペース */
+}
+
+/* --- 各履歴アイテム (li) --- */
+.historyItem {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.historyItem:hover {
+  transform: translateY(-2px); /* 少し浮き上がるエフェクト */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* --- 操作の種類を示すタグ --- */
+.itemType {
+  font-weight: bold;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #fff;
+  flex-shrink: 0; /* タグが縮まないようにする */
+}
+
+.typeAdd {
+  background-color: #28a745; /* 緑色 */
+}
+
+.typeSell {
+  background-color: #dc3545; /* 赤色 */
+}
+
+/* --- コンテンツ（ビル名や詳細） --- */
+.itemContent {
+  flex-grow: 1; /* 中央のコンテンツエリアが幅を広げるように */
+}
+
+.itemTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.25rem 0;
+}
+
+.itemDetails {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+/* --- 右側のボタンエリア --- */
+.itemActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.actionButton,
+.deleteButton {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background-color: #f0f0f0;
+  border-color: #999;
+}
+
+.deleteButton {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.deleteButton:hover {
+  background-color: #dc3545;
+  color: #fff;
+}
