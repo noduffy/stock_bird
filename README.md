@@ -39,4 +39,5 @@ Desktop apps for NODACORPORATION
 └─ 要件定義.md                  # 機能要件・仕様などのまとめ\
 
 # exe化
-npm run dist
+1. versionを変更
+2. コマンドでnpm run dist
