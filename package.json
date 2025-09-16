@@ -1,9 +1,11 @@
 {
-  "name": "vite-project",
+  "name": "stock-bird",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "main": "electron/main.cjs",
   "type": "module",
+  "description": "元金と減価償却をシミュレーションを通して管理するアプリ。v1.0.0でシミュレーション履歴搭載、その他細かい修正",
+  "author": "Noda Kosuke <noduffy.1267@gmail.com> (https://github.com/noduffy)",
   "scripts": {
     "dev": "vite",
     "start": "cross-env NODE_ENV=development electron electron/main.cjs",
