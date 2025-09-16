@@ -553,10 +553,6 @@ const GraphPage = () => {
         </ResponsiveContainer>
       </div>
 
-      <button className={styles.backbutton} onClick={() => navigate("/")}>
-        戻る
-      </button>
-
       <SimulationHistory
         simulations={simulations}
         onEdit={(sim) => {
@@ -570,6 +566,10 @@ const GraphPage = () => {
           setSimulations(simulations.filter((s) => s.id !== id));
         }}
       />
+
+      <button className={styles.backbutton} onClick={() => navigate("/")}>
+        戻る
+      </button>
 
     </div>
   );
