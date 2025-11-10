@@ -1,3 +1,5 @@
+// src/pages/GraphPage.tsx (修正版)
+
 import SimulationHistory from "./SimulationHistory";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PropertyData } from "../types/property";
@@ -10,9 +12,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ReferenceArea,
 } from "recharts";
 import dayjs from "dayjs";
-import { ReferenceArea } from "recharts";
 
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
@@ -21,10 +23,9 @@ import { useEffect, useState, useMemo } from "react";
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-import styles from "../styles/GraphPage.module.css";
+// import styles from "../styles/GraphPage.module.css"; // ← 削除
 import minMax from "dayjs/plugin/minMax";
 dayjs.extend(minMax);
-
 
 type MonthlyData = {
   month: string; // e.g., "2021-06"
@@ -80,6 +81,7 @@ const GraphPage = () => {
       [originalData, virtualBuildings]
   );
 
+  // ▼▼▼ ロジックを復元 ▼▼▼
   const [form, setForm] = useState<PropertyData>({
     ビル名: "",
     契約日: "",
@@ -98,17 +100,24 @@ const GraphPage = () => {
     name: "",
     date: dayjs().format("YYYY-MM-DD"),
   });
+  // ▲▲▲ ロジックを復元 ▲▲▲
 
 
   if (!data || data.length === 0) {
     return (
-      <div>
-        <h2>データがありません</h2>
-        <button onClick={() => navigate("/")}>戻る</button>
+      <div className="text-center p-10">
+        <h2 className="text-xl font-semibold mb-4">データがありません</h2>
+        <button
+          onClick={() => navigate("/")}
+          className="bg-gray-200 py-2 px-6 rounded-lg hover:bg-gray-300"
+        >
+          戻る
+        </button>
       </div>
     );
   }
 
+  // ▼▼▼ グラフ計算ロジックを復元 ▼▼▼
   const monthlyMap: Record<string, MonthlyData> = {};
 
   data.forEach((item) => {
@@ -238,9 +247,16 @@ const GraphPage = () => {
     minMonth = "2000-01";
     maxMonth = "2100-01";
   }
+  // ▲▲▲ グラフ計算ロジックを復元 ▲▲▲
 
   const [startMonth, setStartMonth] = useState(minMonth);
   const [endMonth, setEndMonth] = useState(maxMonth);
+
+  // 起動時にminMonth, maxMonthがセットされるように
+  useEffect(() => {
+    setStartMonth(minMonth);
+    setEndMonth(maxMonth);
+  }, [minMonth, maxMonth]);
 
   const filterdData = chartData.filter((item) => {
     return (
@@ -250,6 +266,7 @@ const GraphPage = () => {
   });
 
 
+  // ▼▼▼ Tooltipロジックを復元 ▼▼▼
   const CustomTooltip = ({
     active,
     payload,
@@ -278,9 +295,7 @@ const GraphPage = () => {
     const formattedLabel = `${year}年${month}月`;
 
     return (
-      <div
-        style={{ background: "white", padding: 10, border: "1px solid #ccc" }}
-      >
+      <div className="bg-white p-4 border border-gray-300 shadow-lg rounded-md">
         <strong>{formattedLabel}</strong>
         <br />
         元金: {data.元金合計.toLocaleString()}
@@ -298,51 +313,73 @@ const GraphPage = () => {
       </div>
     );
   };
+  // ▲▲▲ Tooltipロジックを復元 ▲▲▲
+
+    
+  // ボタン共通スタイル
+  const buttonClass = "py-2 px-5 bg-gray-200 border-none rounded-md cursor-pointer text-sm hover:bg-gray-300 transition-colors";
+  const modalButtonClass = "py-1.5 px-4 rounded-md cursor-pointer transition-colors";
+  const modalConfirmButtonClass = `${modalButtonClass} bg-blue-500 text-white hover:bg-blue-600`;
+  const modalCancelButtonClass = `${modalButtonClass} bg-gray-200 text-gray-800 hover:bg-gray-300`;
+  const modalInputClass = "py-1.5 px-2.5 text-sm rounded-md border border-gray-300 w-full"; // .formInput
     
   return (
-    <div className={styles.container}>
+    // .container (print: クラスを削除)
+    <div className="w-full max-w-[90vw] mx-auto">
+      
+      {/* --- コントロールパネル --- */}
+      {/* .controls (print: クラスを削除) */}
+      <div className="flex flex-wrap gap-4 justify-center mb-5">
 
+        {/* --- 印刷ボタンを削除 --- */}
 
-      <div className={styles.controls}>
-
-        <div className={styles.controlGroup}>
-          <label>
+        {/* --- 売却コントロール --- */}
+        {/* .controlGroup */}
+        <div className="bg-white border border-gray-300 p-3 rounded-lg shadow-sm flex flex-col gap-1.5">
+          <label className="text-sm">
             売却日：
             <input
               type="date"
               value={sellForm.date}
               onChange={(e) => setSellForm({ ...sellForm, date: e.target.value })}
+              className="ml-2 border-gray-300 rounded-md"
             />
           </label>
-        </div>
-        <div className={styles.controlGroup}>
-          <button className={styles.button} onClick={() => setShowSellModal(true)}>
+          <button className={buttonClass} onClick={() => setShowSellModal(true)}>
             ビルを売却
           </button>
         </div>
+        
+        {/* --- 売却モーダル --- */}
         {showSellModal && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.modalContent}>
-              <h3>ビルを売却</h3>
-              <ul className={styles.radioGroup}>
+          // .modalOverlay
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+            {/* .modalContent */}
+            <div className="bg-white p-6 py-8 rounded-lg w-96 shadow-xl max-h-[80vh] overflow-y-auto">
+              <h3 className="mt-0 mb-4 text-xl font-semibold">ビルを売却</h3>
+              {/* .radioGroup */}
+              <ul className="list-none p-0 m-0 mb-5">
                 {originalData
                   .filter((b) => !soldBuildings.some((s) => s.ビル名 === b.ビル名))
                   .map((b, i) => (
-                    <li key={i}>
-                      <label>
+                    <li key={i} className="mb-2.5">
+                      <label className="flex items-center cursor-pointer">
                         <input
                           type="radio"
                           name="sell"
                           value={b.ビル名}
                           onChange={() => setSellForm({ ...sellForm, name: b.ビル名 })}
+                          className="mr-2"
                         />
                         {b.ビル名}
                       </label>
                     </li>
                   ))}
               </ul>
-              <div className={styles.modalButtons}>
+              {/* .modalButtons */}
+              <div className="flex justify-end gap-4">
                 <button
+                  // ▼▼▼ 売却ロジックを復元 ▼▼▼
                   onClick={() => {
                     if (!sellForm.name || !sellForm.date) return;
 
@@ -357,33 +394,51 @@ const GraphPage = () => {
                     setSellForm({ name: "", date: dayjs().format("YYYY-MM-DD") });
                     setShowSellModal(false);
                   }}
+                  // ▲▲▲ 売却ロジックを復元 ▲▲▲
+                  className={modalConfirmButtonClass}
                 >
                   売却する
                 </button>
-                <button onClick={() => setShowSellModal(false)}>キャンセル</button>
+                <button onClick={() => setShowSellModal(false)} className={modalCancelButtonClass}>
+                  キャンセル
+                </button>
               </div>
             </div>
           </div>
         )}
 
-
-        <div className={styles.controlGroup}>
-          <button className={styles.button} onClick={() => setShowModal(true)}>
+        {/* --- 追加コントロール --- */}
+        {/* .controlGroup */}
+        <div className="bg-white border border-gray-300 p-3 rounded-lg shadow-sm flex flex-col gap-1.5">
+          <button className={buttonClass} onClick={() => {
+            setForm({ // フォームをリセット
+              ビル名: "", 契約日: "", 減価償却: 0, 法定耐用年数: 0, 元金: 0, ローンの期限: "", 元金の支払いタイプ: "毎月",
+            });
+            setEditIndex(null); // 新規追加モード
+            setShowModal(true);
+          }}>
             仮想ビルを追加
           </button>
         </div>
-        {showModal && (
-          <div className={styles.modalOverlay}>
-            <div className={styles.modalContent}>
-              <h3>仮想ビルを追加</h3>
 
+        {/* --- 追加モーダル --- */}
+        {showModal && (
+          // .modalOverlay
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+            {/* .modalContent */}
+            <div className="bg-white p-6 py-8 rounded-lg w-96 shadow-xl max-h-[80vh] overflow-y-auto">
+              <h3 className="mt-0 mb-4 text-xl font-semibold">
+                {editIndex ? "仮想ビルを編集" : "仮想ビルを追加"}
+              </h3>
               {["ビル名", "契約日", "減価償却", "法定耐用年数", "元金", "ローンの期限"].map((key) => (
-                <div key={key} className={styles.formField}>
-                  <label>{key}：</label>
+                // .formField
+                <div key={key} className="mb-3 flex flex-col">
+                  <label className="mb-1 font-medium text-sm">{key}：</label>
                   <input
                     type={getInputType(key)}
-                    className={styles.formInput}
+                    className={modalInputClass}
                     value={(form as any)[key]?.toString() ?? ""}
+                    // ▼▼▼ onChangeロジックを復元 ▼▼▼
                     onChange={(e) => {
                       const value = e.target.value;
                       const newValue =
@@ -392,12 +447,14 @@ const GraphPage = () => {
                           : value;
                       setForm({ ...form, [key]: newValue });
                     }}
+                    // ▲▲▲ onChangeロジックを復元 ▲▲▲
                   />
                 </div>
               ))}
-
-              <div className={styles.modalButtons}>
+              {/* .modalButtons */}
+              <div className="flex justify-end gap-4 mt-5">
                 <button
+                  // ▼▼▼ 保存ロジックを復元 ▼▼▼
                   onClick={() => {
                     if (editIndex !== null) {
                       const updatedSimulations = simulations.map((sim) =>
@@ -425,60 +482,76 @@ const GraphPage = () => {
                     setEditIndex(null);
                     setShowModal(false);
                   }}
+                  // ▲▲▲ 保存ロジックを復元 ▲▲▲
+                  className={modalConfirmButtonClass}
                 >
                   保存
                 </button>
-
-                <button onClick={() => setShowModal(false)}>キャンセル</button>
+                <button onClick={() => {
+                  setEditIndex(null);
+                  setShowModal(false);
+                }} className={modalCancelButtonClass}>
+                  キャンセル
+                </button>
               </div>
             </div>
           </div>
         )}
-
       </div>
 
-      <div className={styles.dateControlsBox}>
-        <div className={styles.dateControlsRow}>
-          <div className={styles.dateInputGroup}>
-            <label htmlFor="startMonth">開始月</label>
+      {/* --- 日付・閾値コントロール --- */}
+      {/* .dateControlsBox (print: クラスを削除) */}
+      <div className="bg-white border border-gray-300 p-3 px-4 rounded-lg shadow-sm mx-auto mb-5 w-fit">
+        {/* .dateControlsRow */}
+        <div className="flex items-end flex-wrap justify-start gap-4">
+          {/* .dateInputGroup */}
+          <div className="flex flex-col">
+            <label htmlFor="startMonth" className="mb-1 font-medium text-sm whitespace-nowrap">開始月</label>
             <input
               type="month"
               id="startMonth"
               value={startMonth}
+              min={minMonth}
+              max={endMonth}
               onChange={(e) => setStartMonth(e.target.value)}
+              className={modalInputClass}
             />
           </div>
-
-          <div className={styles.dateInputGroup}>
-            <label htmlFor="endMonth">終了月</label>
+          {/* .dateInputGroup */}
+          <div className="flex flex-col">
+            <label htmlFor="endMonth" className="mb-1 font-medium text-sm whitespace-nowrap">終了月</label>
             <input
               type="month"
               id="endMonth"
               value={endMonth}
+              min={startMonth}
+              max={maxMonth}
               onChange={(e) => setEndMonth(e.target.value)}
+              className={modalInputClass}
             />
           </div>
-
-          <div className={styles.thresholdInline}>
-            <label htmlFor="threshold">赤背景：元金 − 減価償却 ＞</label>
+          {/* .thresholdInline */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="threshold" className="text-sm">赤背景：元金 − 減価償却 ＞</label>
             <input
               id="threshold"
               type="number"
               value={threshold}
               onChange={(e) => setThreshold(Number(e.target.value))}
-              className={styles.thresholdInput}
+              className={`${modalInputClass} w-24`} // .thresholdInput
             />
-            <span>万円</span>
+            <span className="text-sm">万円</span>
           </div>
         </div>
       </div>
 
-
-
-      <div className={styles.chartContainer}>
+      {/* --- グラフコンテナ --- */}
+      {/* .chartContainer (print: クラスを削除) */}
+      <div className="bg-white border border-gray-300 rounded-lg p-5 pt-8 pr-0 shadow-sm mx-auto mb-6 w-full">
         <ResponsiveContainer width="95%" height={500}>
           <LineChart
             data={filterdData}
+            // ▼▼▼ クリックロジックを復元 ▼▼▼
             onClick={() => {
               if (hoveredMonth) {
                 const currentMonth = dayjs(hoveredMonth);
@@ -504,6 +577,7 @@ const GraphPage = () => {
                 window.electronAPI.openBuildingList(hoveredMonth);
               }
             }}
+            // ▲▲▲ クリックロジックを復元 ▲▲▲
             margin={{ top: 20, right: 30, left: 50, bottom: 20}}
           >
             <CartesianGrid strokeDasharray="3 3" />
@@ -511,6 +585,8 @@ const GraphPage = () => {
               dataKey="month"
               ticks={xTicks}
               tickFormatter={(tick) => dayjs(tick).format("YYYY年MM月")}
+              // 期間が長すぎる場合に備えて間隔を調整
+              interval="preserveStartEnd" 
             />
             <YAxis
               tickFormatter={(value) =>
@@ -532,6 +608,7 @@ const GraphPage = () => {
                 strokeOpacity={0.2}
                 fill="red"
                 fillOpacity={0.1}
+                ifOverflow="hidden" // グラフ範囲外に描画しない
               />
             ))}
 
@@ -541,6 +618,7 @@ const GraphPage = () => {
               stroke="#8884d8"
               strokeWidth={2}
               name="減価償却"
+              dot={false} // 点を非表示にして見やすく
             />
             <Line
               type="monotone"
@@ -548,13 +626,16 @@ const GraphPage = () => {
               stroke="#82ca9d"
               strokeWidth={2}
               name="元金"
+              dot={false} // 点を非表示にして見やすく
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
+      {/* --- 履歴コンポーネント --- */}
       <SimulationHistory
         simulations={simulations}
+        // ▼▼▼ 編集・削除ロジックを復元 ▼▼▼
         onEdit={(sim) => {
           if (sim.type === 'add') {
             setForm(sim.data);
@@ -565,11 +646,19 @@ const GraphPage = () => {
         onDelete={(id) => {
           setSimulations(simulations.filter((s) => s.id !== id));
         }}
+        // ▲▲▲ 編集・削除ロジックを復元 ▲▲▲
       />
 
-      <button className={styles.backbutton} onClick={() => navigate("/")}>
-        戻る
-      </button>
+      {/* --- 戻るボタン --- */}
+      {/* (print: クラスを削除) */}
+      <div className="text-center mt-3 mb-10">
+        <button
+          className={`${buttonClass} text-center`} // .backbutton
+          onClick={() => navigate("/")}
+        >
+          戻る
+        </button>
+      </div>
 
     </div>
   );
