@@ -81,7 +81,7 @@ export const DepreciationChart: React.FC<Props> = ({
   const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
 
   return (
-    <div className="bg-white border border-gray-300 rounded-lg p-5 pt-8 pr-0 shadow-sm mx-auto mb-6 w-full">
+    <div className="bg-white border border-gray-300 rounded-lg p-5 pt-8 pr-0 shadow-sm mx-auto mb-6 w-full relative z-0">
       <ResponsiveContainer width="95%" height={500}>
         <LineChart
           data={data}

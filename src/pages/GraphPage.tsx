@@ -169,12 +169,16 @@ const GraphPage = () => {
           <button className={buttonClass} onClick={() => {
             setEditSimId(null); // 新規追加モード
             setShowAddModal(true);
+            setShowSellModal(false);
           }}>
             仮想ビルを追加
           </button>
         </div>
         <div className="bg-white border border-gray-300 p-3 rounded-lg shadow-sm flex flex-col gap-1.5">
-          <button className={buttonClass} onClick={() => setShowSellModal(true)}>
+          <button className={buttonClass} onClick={() => {
+            setShowSellModal(true)
+            setShowAddModal(false);
+          }}>
             ビルを売却
           </button>
         </div>

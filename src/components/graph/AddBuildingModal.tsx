@@ -66,7 +66,7 @@ export const AddBuildingModal: React.FC<Props> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-[1000]">
       <div className="bg-white p-6 py-8 rounded-lg w-96 shadow-xl max-h-[80vh] overflow-y-auto">
         <h3 className="mt-0 mb-4 text-xl font-semibold">
           {initialData ? "仮想ビルを編集" : "仮想ビルを追加"}
