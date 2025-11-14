@@ -1,4 +1,4 @@
-// src/pages/BuildingList.tsx (インデント4スペース、タイポ修正)
+// src/pages/BuildingList.tsx
 
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
@@ -9,7 +9,6 @@ dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
 const BuildingList = () => {
-    // ▼▼▼ "1_" を "1" に修正 ▼▼▼
     const params = new URLSearchParams(window.location.hash.split("?")[1]);
     const day = params.get("month"); // 例: "2025-06"
     const year = day?.slice(0, 4);
