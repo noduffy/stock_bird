@@ -1,9 +1,11 @@
-const { contextBridge, ipcRenderer } = require('electron');
+// electron/preload.js (全コード)
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  openBuildingList: (month) => ipcRenderer.send('open-building-list', month),
-});
+const { contextBridge, ipcRenderer } = require("electron");
 
-window.addEventListener('DOMContentLoaded', () => {
-    // preload script
+contextBridge.exposeInMainWorld("electronAPI", {
+    openBuildingList: (month) =>
+        ipcRenderer.send("open-building-list", month),
+
+    // handlePrint の行を削除
+    handleSavePDF: () => ipcRenderer.invoke("handle-save-pdf"),
 });
