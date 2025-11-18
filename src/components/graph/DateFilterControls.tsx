@@ -29,7 +29,7 @@ export const DateFilterControls: React.FC<Props> = ({
   
   // ユーザーが範囲外の数値を入力した場合に、値を-100〜+100の範囲に丸める関数
   const handleThresholdChange = (value: number) => {
-    const clampedValue = Math.max(-30, Math.min(30, value));
+    const clampedValue = Math.max(-100, Math.min(100, value));
     onThresholdChange(clampedValue);
   };
 
