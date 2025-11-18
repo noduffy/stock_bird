@@ -1,11 +1,13 @@
-// src/components/graph/SellBuildingModal.tsx (UI改善版)
+// src/components/graph/SellBuildingModal.tsx (全コード・型エラー修正)
 
 import React, { useState, useEffect, useMemo } from "react";
 import dayjs from "dayjs";
 import { PropertyData } from "../../types/property";
+import DatePicker from "react-datepicker";
 
 // 共通スタイル
-const modalButtonClass = "py-1.5 px-4 rounded-md cursor-pointer transition-colors";
+const modalButtonClass =
+    "py-1.5 px-4 rounded-md cursor-pointer transition-colors";
 const modalConfirmButtonClass = `${modalButtonClass} bg-blue-500 text-white hover:bg-blue-600`;
 const modalCancelButtonClass = `${modalButtonClass} bg-gray-200 text-gray-800 hover:bg-gray-300`;
 
@@ -27,13 +29,13 @@ export const SellBuildingModal: React.FC<Props> = ({
     onSell,
     availableBuildings,
 }) => {
-    // --- ロジック (変更なし) ---
     const [sellForm, setSellForm] = useState<SellFormData>({
         name: "",
         date: dayjs().format("YYYY-MM-DD"),
     });
 
-    const minDate = useMemo(() => {
+    // 選択中のビルの "契約日" (YYYY-MM-DD)
+    const selectedBuildingContractDate = useMemo(() => {
         if (!sellForm.name) return undefined;
         const selectedBuilding = availableBuildings.find(
             (b) => b.ビル名 === sellForm.name
@@ -43,16 +45,34 @@ export const SellBuildingModal: React.FC<Props> = ({
             : undefined;
     }, [sellForm.name, availableBuildings]);
 
+    // ▼▼▼ 修正点 ▼▼▼
+    // 文字列(YYYY-MM-DD)をDateオブジェクトに変換 (nullではなくundefinedを返す)
+    const toDate = (dateStr: string | undefined) => {
+        return dateStr ? dayjs(dateStr).toDate() : undefined; // ★ null を undefined に変更
+    };
+    // ▲▲▲ 修正点 ▲▲▲
+
+    // 契約日より前に売却日が設定されていたら、契約日に修正する
     useEffect(() => {
-        if (minDate && dayjs(sellForm.date).isBefore(dayjs(minDate))) {
-            setSellForm((prev) => ({ ...prev, date: minDate }));
+        if (
+            selectedBuildingContractDate &&
+            dayjs(sellForm.date).isBefore(dayjs(selectedBuildingContractDate))
+        ) {
+            setSellForm((prev) => ({
+                ...prev,
+                date: selectedBuildingContractDate,
+            }));
         }
-    }, [minDate, sellForm.date]);
+    }, [selectedBuildingContractDate, sellForm.date]);
 
     const handleBuildingChange = (buildingName: string) => {
-        setSellForm((prev) => ({ ...prev, name: buildingName }));
+        setSellForm((prev) => ({
+            ...prev,
+            name: buildingName,
+        }));
     };
 
+    // 開くたびにリセット
     useEffect(() => {
         if (isOpen) {
             setSellForm({ name: "", date: dayjs().format("YYYY-MM-DD") });
@@ -66,7 +86,6 @@ export const SellBuildingModal: React.FC<Props> = ({
             alert("売却するビルと売却日を選択してください。");
         }
     };
-    // --- ロジック (ここまで) ---
 
     if (!isOpen) {
         return null;
@@ -77,26 +96,31 @@ export const SellBuildingModal: React.FC<Props> = ({
             <div className="bg-white p-6 py-8 rounded-lg w-96 shadow-xl max-h-[80vh] overflow-y-auto">
                 <h3 className="mt-0 mb-4 text-xl font-semibold">ビルを売却</h3>
 
+                {/* --- 売却日 --- */}
                 <div className="mb-4">
                     <label className="text-sm">売却日：</label>
-                    <input
-                        type="date"
-                        value={sellForm.date}
-                        min={minDate}
-                        disabled={!sellForm.name}
-                        onChange={(e) =>
-                            setSellForm({ ...sellForm, date: e.target.value })
+                    <DatePicker
+                        selected={toDate(sellForm.date)}
+                        onChange={(date) =>
+                            setSellForm({
+                                ...sellForm,
+                                date: date
+                                    ? dayjs(date).format("YYYY-MM-DD")
+                                    : "",
+                            })
                         }
-                        className="ml-2 border-gray-300 rounded-md p-1 disabled:bg-gray-100 disabled:text-gray-400"
+                        minDate={toDate(selectedBuildingContractDate)} // これで型が一致
+                        disabled={!sellForm.name}
+                        dateFormat="yyyy-MM-dd"
+                        className="ml-2 border-gray-300 rounded-md p-1 w-32 disabled:bg-gray-100 disabled:text-gray-400"
+                        autoComplete="off"
                     />
                 </div>
 
-                {/* ▼▼▼ UI改善 ▼▼▼ */}
-                {/* 1. リスト全体に枠線と縦のスクロールを追加 */}
+                {/* --- ビル選択リスト --- */}
                 <ul className="list-none p-0 m-0 mb-5 border border-gray-200 rounded-lg max-h-60 overflow-y-auto divide-y divide-gray-200">
                     {availableBuildings.length > 0 ? (
                         availableBuildings.map((b) => (
-                            // 2. li 自体をラベルとして機能させる
                             <li key={b.ビル名}>
                                 <label className="flex items-center cursor-pointer p-3 hover:bg-gray-50 w-full">
                                     <input
@@ -104,16 +128,21 @@ export const SellBuildingModal: React.FC<Props> = ({
                                         name="sell"
                                         value={b.ビル名}
                                         checked={sellForm.name === b.ビル名}
-                                        onChange={() => handleBuildingChange(b.ビル名)}
+                                        onChange={() =>
+                                            handleBuildingChange(b.ビル名)
+                                        }
                                         className="mr-3"
                                     />
-                                    {/* 3. flex-grow でビル名を左に、契約日を右に配置 */}
                                     <div className="flex justify-between w-full">
                                         <span className="text-sm font-medium text-gray-900">
                                             {b.ビル名}
                                         </span>
                                         <span className="text-sm text-gray-500">
-                                            (契約: {dayjs(b.契約日).format("YYYY-MM-DD")})
+                                            (契約:{" "}
+                                            {dayjs(b.契約日).format(
+                                                "YYYY-MM-DD"
+                                            )}
+                                            )
                                         </span>
                                     </div>
                                 </label>
@@ -125,17 +154,21 @@ export const SellBuildingModal: React.FC<Props> = ({
                         </li>
                     )}
                 </ul>
-                {/* ▲▲▲ UI改善 ▲▲▲ */}
 
                 <div className="flex justify-end gap-4">
                     <button
                         onClick={handleSubmit}
-                        disabled={!sellForm.name || availableBuildings.length === 0}
+                        disabled={
+                            !sellForm.name || availableBuildings.length === 0
+                        }
                         className={`${modalConfirmButtonClass} disabled:bg-gray-400`}
                     >
                         売却する
                     </button>
-                    <button onClick={onClose} className={modalCancelButtonClass}>
+                    <button
+                        onClick={onClose}
+                        className={modalCancelButtonClass}
+                    >
                         キャンセル
                     </button>
                 </div>
